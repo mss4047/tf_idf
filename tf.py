@@ -29,7 +29,7 @@ def getweight(name, term):
             return 0
     except:
         return 0
-# yeet
+
 
 def query(qstring):
     # make query lower case
@@ -52,13 +52,11 @@ def query(qstring):
     qtf = {}
     for word in qstemmed:
         qtf[word] = qstemmed.count(word)
-    print(qtf)
 
     # query weights
     qw = {}
     for word, wgt in qtf.items():
         qw[word] = 1 + math.log10(wgt)
-    print(qw)
 
     # normalize weights
     qnorm = {}
@@ -68,7 +66,9 @@ def query(qstring):
     denominator = math.sqrt(denominator)
     for word, wgt in qw.items():
         qnorm[word] = wgt / denominator
-    print(qnorm)
+
+    q = [a for a in qnorm.values()]
+
 
     # create posting list for each term in query
     posting_list = []
@@ -78,19 +78,49 @@ def query(qstring):
             if word in doc.keys():
                 temp.append([files[int(iterator)], doc[word] ])
         posting_list.append(temp)
-    print(posting_list)
-    print(len(posting_list))
 
     # sort each posting list in descending order of TF-IDF weight
     sortedPosList = []
     for arr in posting_list:
         sortedPosList.append(sorted(arr, key=itemgetter(1), reverse=True ))
-    print(sortedPosList)
 
-    # now find matching documents
+    # top 10 elements
+    top10 = []
+    for posList in sortedPosList:
+        top10.append(posList[:10])
+
+    dox = []
+    for term in top10:
+        dox.append([i[0] for i in term])
+
+    doc_list = dox[0]
+    for doc in doc_list:
+        current = doc
+        flag = True
+        for check in dox:
+            if current not in doc:
+                flag = False
+        if flag == False:
+            continue
+        else:
+            break
+    if flag==True:
+        print(current)
+    d = []
+    for term in top10:
+        for pair in term:
+            if pair[0] == current:
+                d.append(pair[1])
+                continue
+    index = 0
+    for idx, name in enumerate(files):
+        if name == current:
+            index = idx
+            break
     
-
-
+    score = sum(a * b for a, b in zip(d, q))
+    ret = (current, score)
+    return ret
 
 # Step 1: read files and make them lowercase
 P1 = './presidential_debates'
@@ -137,6 +167,7 @@ for doc in stemmed_tokens:
         if word not in unique:
             unique.append(word)
 
+# finding document frequency
 df = {}
 for word in unique:
     temp = 0
@@ -145,7 +176,7 @@ for word in unique:
             temp += 1
     df[word] = temp
 
-# calculating term frequency
+# finding term frequency
 tf = []
 for document in stemmed_tokens:
     temp = {}
@@ -173,4 +204,5 @@ for doc in w:
         temp[word] = val/denominator
     normalize_weights.append(temp)
 
-query("health insurance wall street")
+print("(%s, %.12f)" % query("terror attack"))
+print("(%s, %.12f)" % query("health insurance wall street"))
